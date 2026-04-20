@@ -89,11 +89,18 @@ def main():
     # Game external handling 
     winner = None 
     game_over = False 
+    start_screen = True 
+    countdown_active = False 
+    countdown_value = 3 
+    countdown_start_time = 0 
+
     running = True 
     clock = pygame.Clock() 
 
     # font for game end screen 
     font_big = pygame.font.SysFont(None, 80)
+    font_medium = pygame.font.SysFont(None, 40)
+    font_small = pygame.font.SysFont(None, 28)
 
     # main game loop  
     while running:
@@ -106,11 +113,26 @@ def main():
             if event.type == pygame.QUIT:
                 running = False 
 
+            if start_screen and event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_SPACE: 
+                    start_screen = False 
+                    countdown_active = True 
+                    countdown_value = 3 
+                    countdown_start_time = pygame.time.get_ticks()
+
         # check keys being held down 
         keys = pygame.key.get_pressed() 
 
-        # as long as games not over yet 
-        if not game_over:
+        if countdown_active: 
+            elapsed = (pygame.time.get_ticks() - countdown_start_time) // 1000
+
+            if elapsed < 3: 
+                countdown_value = 3 - elapsed 
+            else:
+                countdown_active = False 
+
+        # gameplay updates only after countdown is done 
+        if not start_screen and not countdown_active and not game_over:
             # update player sprite 
             player1.update(keys, terrain)
             player2.update(keys, terrain)
@@ -121,13 +143,11 @@ def main():
                 hit_blocks = pygame.sprite.spritecollide(bullet, terrain, False)
                 if hit_blocks:
                     hit_indestructible = False 
-
                     for block in hit_blocks:
                         if block.destructible:
                             block.kill()
                         else:
                             hit_indestructible = True 
-                    
                     if isinstance(bullet, BigBullet):
                         if hit_indestructible:
                             bullet.kill() 
@@ -137,14 +157,12 @@ def main():
             for bullet in player2.bullets.copy():
                 hit_blocks = pygame.sprite.spritecollide(bullet,terrain,False)
                 if hit_blocks:
-                    hit_indestructible = False 
-
+                    hit_indestructible = False
                     for block in hit_blocks:
                         if block.destructible:
                             block.kill()
                         else:
                             hit_indestructible = True 
-                    
                     if isinstance(bullet, BigBullet):
                         if hit_indestructible:
                             bullet.kill() 
@@ -163,35 +181,60 @@ def main():
                 # apply effects to player2 here 
                 spawn_powerUp(powerUp, rooms, block_size)
 
-        # bullet collision detection
-        if pygame.sprite.spritecollide(player1, player2.bullets, True):
-            winner = "Player 2"
-            player1.kill()
-            game_over = True 
-        if pygame.sprite.spritecollide(player2, player1.bullets, True):
-            winner = "Player 1"
-            player2.kill()
-            game_over = True 
+            # bullet collision detection
+            if pygame.sprite.spritecollide(player1, player2.bullets, True):
+                winner = "Player 2"
+                player1.kill()
+                game_over = True 
+            if pygame.sprite.spritecollide(player2, player1.bullets, True):
+                winner = "Player 1"
+                player2.kill()
+                game_over = True 
 
-        # draw everything 
-        gameDisplay.fill(WHITE)
+        if start_screen: 
+            gameDisplay.fill((255, 0, 0))
+            
+            title_text = font_big.render("Shooting Game", True, WHITE)
+            line1 = font_medium.render("Player 1: Arrow keys to move, M to shoot", True, WHITE)
+            line2 = font_medium.render("Player 2: WASD to move, Q to shoot", True, WHITE)
+            line3 = font_small.render("Collect the yellow power up to fire a big bullet", True, WHITE)
+            line4 = font_small.render("Press any key to start", True, WHITE)
 
-        # draw terrain
-        terrain.draw(gameDisplay)
+            gameDisplay.blit(title_text, title_text.get_rect(center=(400,150)))
+            gameDisplay.blit(line1, line1.get_rect(center=(400,250)))
+            gameDisplay.blit(line2, line2.get_rect(center=(400,300)))
+            gameDisplay.blit(line3, line3.get_rect(center=(400,360)))
+            gameDisplay.blit(line4, line4.get_rect(center=(400,440)))
 
-        # draw players 
-        players.draw(gameDisplay)
-        player1.draw_bullets(gameDisplay)
-        player2.draw_bullets(gameDisplay)
+        elif countdown_active:
+            gameDisplay.fill(WHITE)
 
-        # draw powerUp 
-        powerUp.draw(gameDisplay)
+            terrain.draw(gameDisplay)
+            players.draw(gameDisplay)
+            powerUp.draw(gameDisplay)
 
+            countdown_text = font_big.render(str(countdown_value), True, BLACK)
+            gameDisplay.blit(countdown_text, countdown_text.get_rect(center=(400,300)))
+        
+        # draw gameplay / game over 
+        else:
+            # draw everything 
+            gameDisplay.fill(WHITE)
 
-        if game_over and winner: 
-            text = font_big.render(f"{winner} Wins!", True, (0, 0, 0))
-            text_rect = text.get_rect(center=(400,300))
-            gameDisplay.blit(text, text_rect)
+            # draw terrain
+            terrain.draw(gameDisplay)
+
+            # draw players 
+            players.draw(gameDisplay)
+            player1.draw_bullets(gameDisplay)
+            player2.draw_bullets(gameDisplay)
+
+            # draw powerUp 
+            powerUp.draw(gameDisplay)
+            
+            if game_over and winner: 
+                text = font_big.render(f"{winner} Wins!", True, WHITE)
+                gameDisplay.blit(text, text.get_rect(center=(400,300)))
 
         pygame.display.flip()
 
