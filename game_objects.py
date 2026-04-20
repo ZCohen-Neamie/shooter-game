@@ -163,7 +163,7 @@ class Player(pygame.sprite.Sprite):
         if keys[self.controls["up"]]:
             self.y_velocity += self.jetpack_strength 
 
-        if keys[self.controls["shoot"]] and self.shoot_cooldown == 0 and self.bullet_count > 0:
+        if keys[self.controls["shoot"]] and self.shoot_cooldown == 0:
             bullet_y = self.rect.centery # what does this do?
 
             if self.has_big_bullet:
