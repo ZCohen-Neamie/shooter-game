@@ -24,7 +24,7 @@ def spawn_powerUp(powerUp_group, rooms, block_size):
     power = PowerUp(x, y)
     powerUp_group.add(power)
 
-def main():
+def setup_round():
     # make map 
     block_size = 20 
     level_map, rooms = generate_cave_map()
@@ -86,9 +86,24 @@ def main():
     powerUp = pygame.sprite.Group()
     spawn_powerUp(powerUp, rooms, block_size)
 
-    # Game external handling 
+    return player1, player2, players, terrain, powerUp, rooms, block_size
+
+
+
+def main():
+    # set up round variables 
+    player1, player2, players, terrain, powerUp, rooms, block_size = setup_round()
+
+    # Game/round external handling 
+    player1_score = 0 
+    player2_score = 0 
+    round_number = 1 
+    
     winner = None 
     game_over = False 
+    round_over = False 
+    round_end_time = 0 
+
     start_screen = True 
     countdown_active = False 
     countdown_value = 3 
@@ -104,41 +119,41 @@ def main():
 
     # main game loop  
     while running:
-        #FPS
+        # FPS
         clock.tick(30)
         
-        # add quit feature 
+        # EVENTS 
         for event in pygame.event.get(): 
             # 1st event handler (QUIT)
             if event.type == pygame.QUIT:
                 running = False 
-
             if start_screen and event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_SPACE: 
                     start_screen = False 
                     countdown_active = True 
                     countdown_value = 3 
                     countdown_start_time = pygame.time.get_ticks()
-
-        # check keys being held down 
         keys = pygame.key.get_pressed() 
 
+
+        # COUNTDOWN 
         if countdown_active: 
             elapsed = (pygame.time.get_ticks() - countdown_start_time) // 1000
-
-            if elapsed < 3: 
-                countdown_value = 3 - elapsed 
+            if elapsed < 1: 
+                countdown_value = 3
+            elif elapsed < 2: 
+                countdown_value = 2 
+            elif elapsed < 3: 
+                countdown_value = 1
             else:
                 countdown_active = False 
 
-        # gameplay updates only after countdown is done 
+        # GAMEPLAY
         if not start_screen and not countdown_active and not game_over:
-            # update player sprite 
             player1.update(keys, terrain)
             player2.update(keys, terrain)
             powerUp.update(terrain)
             
-            # detect bullet collision with terrain and differentiate between BigBullet and normal bullets
             for bullet in player1.bullets.copy():
                 hit_blocks = pygame.sprite.spritecollide(bullet, terrain, False)
                 if hit_blocks:
@@ -158,39 +173,69 @@ def main():
                 hit_blocks = pygame.sprite.spritecollide(bullet,terrain,False)
                 if hit_blocks:
                     hit_indestructible = False
+                    
                     for block in hit_blocks:
                         if block.destructible:
                             block.kill()
                         else:
                             hit_indestructible = True 
+                    
                     if isinstance(bullet, BigBullet):
                         if hit_indestructible:
                             bullet.kill() 
                     else:
                         bullet.kill()
             
-            # detect player collision with powerUp
+            # powerups 
             player1_pickups = pygame.sprite.spritecollide(player1, powerUp, True)
             if player1_pickups:
                 player1.has_big_bullet = True 
                 # apply effect to player1 and generate new powerUp
                 spawn_powerUp(powerUp, rooms, block_size)
+            
             player2_pickups = pygame.sprite.spritecollide(player2, powerUp, True)
             if player2_pickups:
                 player2.has_big_bullet = True 
                 # apply effects to player2 here 
                 spawn_powerUp(powerUp, rooms, block_size)
 
-            # bullet collision detection
-            if pygame.sprite.spritecollide(player1, player2.bullets, True):
-                winner = "Player 2"
-                player1.kill()
-                game_over = True 
-            if pygame.sprite.spritecollide(player2, player1.bullets, True):
-                winner = "Player 1"
-                player2.kill()
-                game_over = True 
+            # player hit detection (ROUND END)
+            if not round_over: 
+                if pygame.sprite.spritecollide(player1, player2.bullets, True):
+                    player1.kill()
+                    player2_score += 1 
+                    winner = "Player 2"
+                    round_over = True 
+                    round_end_time = pygame.time.get_ticks()
+                
+                    if player2_score == 2:
+                        game_over = True 
 
+                elif pygame.sprite.spritecollide(player2, player1.bullets, True):
+                    player2.kill()
+                    player1_score += 1 
+                    winner = "Player 1"
+                    round_over = True 
+                    round_end_time = pygame.time.get_ticks() 
+
+                    if player1_score == 2: 
+                        game_over = True 
+
+
+        # ROUND RESET 
+        if round_over and not game_over:
+            if pygame.time.get_ticks() - round_end_time > 2000: 
+                round_number += 1 
+                player1, player2, players, terrain, powerUp, rooms, block_size = setup_round() 
+
+                round_over = False 
+                winner = None 
+
+                countdown_active = True 
+                countdown_value = 3 
+                countdown_start_time = pygame.time.get_ticks()
+
+        # DRAWING 
         if start_screen: 
             gameDisplay.fill((255, 0, 0))
             
@@ -213,27 +258,34 @@ def main():
             players.draw(gameDisplay)
             powerUp.draw(gameDisplay)
 
+            score_text = font_medium.render(
+                f"P1: {player1_score}   Round {round_number}   P2: {player2_score}",
+                True,
+                BLACK
+            )
+            gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
+
             countdown_text = font_big.render(str(countdown_value), True, BLACK)
             gameDisplay.blit(countdown_text, countdown_text.get_rect(center=(400,300)))
         
         # draw gameplay / game over 
         else:
-            # draw everything 
             gameDisplay.fill(WHITE)
-
-            # draw terrain
             terrain.draw(gameDisplay)
-
-            # draw players 
             players.draw(gameDisplay)
             player1.draw_bullets(gameDisplay)
             player2.draw_bullets(gameDisplay)
-
-            # draw powerUp 
             powerUp.draw(gameDisplay)
-            
+
+            score_text = font_medium.render(
+                f"P1: {player1_score}   Round {round_number}   P2: {player2_score}",
+                True,
+                BLACK
+            )
+            gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
+
             if game_over and winner: 
-                text = font_big.render(f"{winner} Wins!", True, WHITE)
+                text = font_big.render(f"{winner} Wins!", True, BLACK)
                 gameDisplay.blit(text, text.get_rect(center=(400,300)))
 
         pygame.display.flip()
