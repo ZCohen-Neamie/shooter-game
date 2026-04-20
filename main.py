@@ -266,24 +266,6 @@ def main():
             )
             gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
 
-            # Player 1 ammo (top left)
-            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
-            gameDisplay.blit(p1_ammo_text, (10, 10))
-
-            # Player 2 ammo (top right)
-            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
-            p2_rect = p2_ammo_text.get_rect(topright=(790, 10))
-            gameDisplay.blit(p2_ammo_text, p2_rect)
-
-            # Player 1 ammo (top left)
-            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
-            gameDisplay.blit(p1_ammo_text, (10, 10))
-
-            # Player 2 ammo (top right)
-            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
-            p2_rect = p2_ammo_text.get_rect(topright=(790, 10))
-            gameDisplay.blit(p2_ammo_text, p2_rect)
-
             # ammo countdown text 
             p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
             gameDisplay.blit(p1_ammo_text, (10, 10))
@@ -311,15 +293,13 @@ def main():
             )
             gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
 
-                        # Player 1 ammo (top left)
+            # ammo countdown text 
             p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
             gameDisplay.blit(p1_ammo_text, (10, 10))
-
-            # Player 2 ammo (top right)
             p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
-            p2_rect = p2_ammo_text.get_rect(topright=(790, 10))
+            p2_rect = p2_ammo_text.get_rect(topright=(790,10))
             gameDisplay.blit(p2_ammo_text, p2_rect)
-            
+
             if game_over and winner: 
                 text = font_big.render(f"{winner} Wins!", True, BLACK)
                 gameDisplay.blit(text, text.get_rect(center=(400,300)))
