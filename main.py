@@ -258,6 +258,7 @@ def main():
             players.draw(gameDisplay)
             powerUp.draw(gameDisplay)
 
+            # score keeping text 
             score_text = font_medium.render(
                 f"P1: {player1_score}   Round {round_number}   P2: {player2_score}",
                 True,
@@ -274,6 +275,23 @@ def main():
             p2_rect = p2_ammo_text.get_rect(topright=(790, 10))
             gameDisplay.blit(p2_ammo_text, p2_rect)
 
+            # Player 1 ammo (top left)
+            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
+            gameDisplay.blit(p1_ammo_text, (10, 10))
+
+            # Player 2 ammo (top right)
+            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
+            p2_rect = p2_ammo_text.get_rect(topright=(790, 10))
+            gameDisplay.blit(p2_ammo_text, p2_rect)
+
+            # ammo countdown text 
+            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
+            gameDisplay.blit(p1_ammo_text, (10, 10))
+            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
+            p2_rect = p2_ammo_text.get_rect(topright=(790,10))
+            gameDisplay.blit(p2_ammo_text, p2_rect)
+
+            # countdown text 
             countdown_text = font_big.render(str(countdown_value), True, BLACK)
             gameDisplay.blit(countdown_text, countdown_text.get_rect(center=(400,300)))
         
