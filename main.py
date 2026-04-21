@@ -28,6 +28,7 @@ def setup_round():
     # make map 
     block_size = 20 
     level_map, rooms = generate_cave_map()
+    level_map = [list(row) for row in level_map]
 
     # determine player starting rooms 
     player1_room, player2_room = random.sample(rooms, 2)
@@ -53,7 +54,7 @@ def setup_round():
     }
 
     # create players 
-    player1 = Player(player1_x, player1_y, BLACK, player1_controls, bullet_count=50)
+    player1 = Player(player1_x, player1_y, WHITE, player1_controls, bullet_count=50)
     player2 = Player(player2_x, player2_y, RED, player2_controls, bullet_count=50)
 
     # player group 
@@ -76,9 +77,26 @@ def setup_round():
                 )
 
                 if is_border:
-                    block = TerrainBlock(block_x, block_y, block_size, color=(100, 100, 100),destructible=False)
+                    block = TerrainBlock(
+                        block_x, 
+                        block_y, 
+                        block_size, 
+                        row_index,
+                        col_index,
+                        level_map,
+                        color=(76, 120, 168),
+                        destructible=False 
+                    )
                 else:
-                    block = TerrainBlock(block_x, block_y, block_size)
+                    block = TerrainBlock(
+                        block_x, 
+                        block_y, 
+                        block_size,
+                        row_index,
+                        col_index,
+                        level_map,
+                        color=(76,120,168)
+                    )
                 
                 terrain.add(block)
 
@@ -160,6 +178,7 @@ def main():
                     hit_indestructible = False 
                     for block in hit_blocks:
                         if block.destructible:
+                            block.level_map[block.row][block.col] = "0"
                             block.kill()
                         else:
                             hit_indestructible = True 
@@ -173,9 +192,9 @@ def main():
                 hit_blocks = pygame.sprite.spritecollide(bullet,terrain,False)
                 if hit_blocks:
                     hit_indestructible = False
-                    
                     for block in hit_blocks:
                         if block.destructible:
+                            block.level_map[block.row][block.col] = "0"
                             block.kill()
                         else:
                             hit_indestructible = True 
@@ -237,7 +256,7 @@ def main():
 
         # DRAWING 
         if start_screen: 
-            gameDisplay.fill((255, 0, 0))
+            gameDisplay.fill((70, 120, 168))
             
             title_text = font_big.render("Shooting Game", True, WHITE)
             line1 = font_medium.render("Player 1: Arrow keys to move, M to shoot", True, WHITE)
@@ -252,9 +271,10 @@ def main():
             gameDisplay.blit(line4, line4.get_rect(center=(400,440)))
 
         elif countdown_active:
-            gameDisplay.fill(WHITE)
+            gameDisplay.fill((0,0,0))
 
-            terrain.draw(gameDisplay)
+            for block in terrain:
+                block.draw(gameDisplay)
             players.draw(gameDisplay)
             powerUp.draw(gameDisplay)
 
@@ -262,25 +282,26 @@ def main():
             score_text = font_medium.render(
                 f"P1: {player1_score}   Round {round_number}   P2: {player2_score}",
                 True,
-                BLACK
+                WHITE
             )
             gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
 
             # ammo countdown text 
-            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
+            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, WHITE)
             gameDisplay.blit(p1_ammo_text, (10, 10))
-            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
+            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, WHITE)
             p2_rect = p2_ammo_text.get_rect(topright=(790,10))
             gameDisplay.blit(p2_ammo_text, p2_rect)
 
             # countdown text 
-            countdown_text = font_big.render(str(countdown_value), True, BLACK)
+            countdown_text = font_big.render(str(countdown_value), True, WHITE)
             gameDisplay.blit(countdown_text, countdown_text.get_rect(center=(400,300)))
         
         # draw gameplay / game over 
         else:
-            gameDisplay.fill(WHITE)
-            terrain.draw(gameDisplay)
+            gameDisplay.fill((0,0,0))
+            for block in terrain:
+                block.draw(gameDisplay)
             players.draw(gameDisplay)
             player1.draw_bullets(gameDisplay)
             player2.draw_bullets(gameDisplay)
@@ -289,19 +310,19 @@ def main():
             score_text = font_medium.render(
                 f"P1: {player1_score}   Round {round_number}   P2: {player2_score}",
                 True,
-                BLACK
+                WHITE
             )
             gameDisplay.blit(score_text, score_text.get_rect(center=(400, 30)))
 
             # ammo countdown text 
-            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, BLACK)
+            p1_ammo_text = font_small.render(f"P1 Ammo: {player1.bullet_count}", True, WHITE)
             gameDisplay.blit(p1_ammo_text, (10, 10))
-            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, BLACK)
+            p2_ammo_text = font_small.render(f"P2 Ammo: {player2.bullet_count}", True, WHITE)
             p2_rect = p2_ammo_text.get_rect(topright=(790,10))
             gameDisplay.blit(p2_ammo_text, p2_rect)
 
             if game_over and winner: 
-                text = font_big.render(f"{winner} Wins!", True, BLACK)
+                text = font_big.render(f"{winner} Wins!", True, WHITE)
                 gameDisplay.blit(text, text.get_rect(center=(400,300)))
 
         pygame.display.flip()

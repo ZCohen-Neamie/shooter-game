@@ -65,7 +65,7 @@ class PowerUp(pygame.sprite.Sprite):
 
 
 class TerrainBlock(pygame.sprite.Sprite):
-    def __init__(self, x, y, size, color=(100, 100, 100), destructible=True):
+    def __init__(self, x, y, size, row, col, level_map, color=(70, 120, 168), destructible=True):
         super().__init__()
 
         self.image = pygame.Surface((size, size))
@@ -74,7 +74,95 @@ class TerrainBlock(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.topleft = (x,y)
 
-        self.destructible = destructible  
+        self.destructible = destructible 
+        self.color = color 
+        self.row = row 
+        self.col = col 
+        self.level_map = level_map 
+        self.size = size  
+
+    def draw(self, surface):
+        pygame.draw.rect(surface, self.color, self.rect)
+
+        WHITE_BORDER = (255, 255, 255)
+        RED_BORDER = (255, 60, 60)
+
+        max_rows = len(self.level_map)
+        max_cols = len(self.level_map[0])
+
+        r = self.row 
+        c = self.col 
+
+        top = self.level_map[r-1][c] if r > 0 else "0"
+        bottom = self.level_map[r+1][c] if r < max_rows - 1 else "0"
+        left = self.level_map[r][c-1] if c > 0 else "0"
+        right = self.level_map[r][c+1] if c < max_cols - 1 else "0"
+
+        x = self.rect.x
+        y = self.rect.y
+        s = self.size 
+
+        # TOP
+        if top == "0":
+            pygame.draw.line(
+                surface, 
+                WHITE_BORDER, 
+                (x,y),
+                (x+s, y), 
+                3
+            )
+            pygame.draw.line(
+                surface,
+                RED_BORDER,
+                (x,y+1),
+                (x+s,y+1),
+                1
+            )
+        if bottom == "0":
+            pygame.draw.line(
+                surface, 
+                WHITE_BORDER, 
+                (x, y + s - 1), 
+                (x + s, y + s - 1), 
+                3
+            )
+            pygame.draw.line(
+                surface,
+                RED_BORDER,
+                (x, y+s-2),
+                (x+s, y+s-2),
+                1
+            )
+        if left == "0":
+            pygame.draw.line(
+                surface, 
+                WHITE_BORDER, 
+                (x, y), 
+                (x, y + s), 
+                3
+            )
+            pygame.draw.line(
+                surface,
+                RED_BORDER,
+                (x+1, y),
+                (x+1, y+s),
+                1
+            )
+        if right == "0":
+            pygame.draw.line(
+                surface, 
+                WHITE_BORDER, 
+                (x+s-1, y), 
+                (x + s - 1, y + s), 
+                3
+            )
+            pygame.draw.line(
+                surface,
+                RED_BORDER,
+                (x+s-2, y),
+                (x+s-2, y+s),
+                1
+            )
 
 
 class Bullet(pygame.sprite.Sprite):
