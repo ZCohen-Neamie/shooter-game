@@ -145,12 +145,30 @@ def main():
             # 1st event handler (QUIT)
             if event.type == pygame.QUIT:
                 running = False 
-            if start_screen and event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_SPACE: 
+            if event.type == pygame.KEYDOWN:
+                if start_screen and event.key == pygame.K_SPACE: 
                     start_screen = False 
                     countdown_active = True 
                     countdown_value = 3 
                     countdown_start_time = pygame.time.get_ticks()
+                
+                elif game_over and event.key == pygame.K_SPACE:
+                    player1, player2, players, terrain, powerUp, rooms, block_size = setup_round()
+
+                    player1_score = 0 
+                    player2_score = 0 
+                    round_number = 1 
+
+                    winner = None
+                    game_over = False
+                    round_over = False
+                    round_end_time = 0 
+
+                    countdown_active = True 
+                    countdown_value = 3 
+                    countdown_start_time = pygame.time.get_ticks()
+
+
         keys = pygame.key.get_pressed() 
 
 
@@ -262,7 +280,7 @@ def main():
             line1 = font_medium.render("Player 1: Arrow keys to move, M to shoot", True, WHITE)
             line2 = font_medium.render("Player 2: WASD to move, Q to shoot", True, WHITE)
             line3 = font_small.render("Collect the yellow power up to fire a big bullet", True, WHITE)
-            line4 = font_small.render("Press any key to start", True, WHITE)
+            line4 = font_small.render("Press SPACE to start", True, WHITE)
 
             gameDisplay.blit(title_text, title_text.get_rect(center=(400,150)))
             gameDisplay.blit(line1, line1.get_rect(center=(400,250)))
@@ -323,7 +341,11 @@ def main():
 
             if game_over and winner: 
                 text = font_big.render(f"{winner} Wins!", True, WHITE)
+                restart_text = font_small.render("Press SPACE to restart", True, WHITE)
+
                 gameDisplay.blit(text, text.get_rect(center=(400,300)))
+                gameDisplay.blit(restart_text, restart_text.get_rect(center=(400,340)))
+
 
         pygame.display.flip()
 
