@@ -191,18 +191,29 @@ class Bullet(pygame.sprite.Sprite):
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, x, y, color, controls, bullet_count=50):
+    def __init__(self, x, y, controls, sprite_sheet_path, bullet_count=50):
         super().__init__()
 
-        self.width = 10 
-        self.height = 10 
-        self.color = color 
+        self.frame_width = 23
+        self.frame_height = 31
+        self.scale = 0.8
 
-        self.image = pygame.Surface((self.width, self.height))
-        self.image.fill(self.color)
+        self.animations = self.load_sprite_sheet(sprite_sheet_path)
+        
+        self.idle_frames = self.animations[0][0:4]
+        self.run_frames = self.animations[1]
+        self.shoot_frames = self.animations[4] 
+        
+        self.animation_index = 0 
+        self.animation_speed = 0.25
+        self.facing_direction = 1 
+        self.image = self.idle_frames[0]
 
         self.rect = self.image.get_rect()
         self.rect.topleft = (x, y)
+        
+        self.width = self.rect.width
+        self.height = self.rect.height 
 
         # store float positions for smoother physics 
         self.x = float(x)
@@ -213,7 +224,7 @@ class Player(pygame.sprite.Sprite):
         self.y_velocity = 0 
 
         # physics 
-        self.gravity = 0.5 
+        self.gravity = 0.4 
         self.jetpack_strength = -0.8
         self.max_fall_speed = 10 
 
@@ -236,8 +247,43 @@ class Player(pygame.sprite.Sprite):
         self.shoot_cooldown = 0 
         self.shoot_delay = 5 
         self.bullet_count = bullet_count 
-        self.bullet_color = color 
         self.has_big_bullet = False 
+
+    def load_sprite_sheet(self, sprite_sheet_path):
+        sheet = pygame.image.load(sprite_sheet_path).convert_alpha()
+        
+        animations = [] 
+        
+        spacing_x = 25 #pixels
+        spacing_y = 17 #pixels
+
+        rows = sheet.get_height() // (self.frame_height + spacing_y)
+        cols = sheet.get_width() // (self.frame_width + spacing_x)
+
+        for row in range(rows):
+            animation_row = [] 
+
+            for col in range(cols):
+                x = col * (self.frame_width + spacing_x)
+                y = row * (self.frame_height + spacing_y)
+                
+                frame = pygame.Surface((self.frame_width, self.frame_height), pygame.SRCALPHA)
+                frame.blit(
+                    sheet,
+                    (0,0),
+                    (x, y, self.frame_width, self.frame_height)
+                )
+
+                scaled_frame = pygame.transform.scale(
+                    frame,
+                    (int(self.frame_width * self.scale), int(self.frame_height * self.scale))
+                )
+
+                animation_row.append(scaled_frame)
+            
+            animations.append(animation_row)
+        
+        return animations 
 
     def handle_input(self, keys):
         if keys[self.controls["left"]]:
@@ -338,10 +384,46 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = int(self.x)
         self.rect.y = int(self.y) 
 
+    def update_animation(self, keys):
+        moving = keys[self.controls["left"]] or keys[self.controls["right"]]
+        shooting = keys[self.controls["shoot"]]
+
+        if shooting:
+            current_animation = self.shoot_frames
+        elif moving:
+            current_animation = self.run_frames
+        else:
+            current_animation = self.idle_frames
+        
+        self.animation_index += self.animation_speed 
+
+        if self.animation_index >= len(current_animation):
+            self.animation_index = 0 
+
+        frame = current_animation[int(self.animation_index)]
+
+        if self.facing_direction == -1:
+            self.image = pygame.transform.flip(frame, True, False)
+        else:
+            self.image = frame 
+
+        # if moving:
+        #     self.animation_index += self.animation_speed
+        #     if self.animation_index >= len(self.animations_right):
+        #         self.animation_index = 0 
+        # else:
+        #     self.animation_index = 0 
+        
+        # if self.facing_direction == 1:
+        #     self.image = self.animations_right[int(self.animation_index)]
+        # else:
+        #     self.image = self.animations_left[int(self.animation_index)]
+
     def update(self, keys, terrain):
         self.handle_input(keys)
         self.apply_physics(keys)
         self.move(terrain)
+        self.update_animation(keys)
 
         if self.shoot_cooldown > 0:
             self.shoot_cooldown -= 1 

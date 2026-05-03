@@ -54,8 +54,18 @@ def setup_round():
     }
 
     # create players 
-    player1 = Player(player1_x, player1_y, WHITE, player1_controls, bullet_count=50)
-    player2 = Player(player2_x, player2_y, RED, player2_controls, bullet_count=50)
+    player1 = Player(
+        player1_x,
+        player1_y,
+        player1_controls,
+        "/Users/zachary/CS102/shooter game/assets/pixel_character_pale_red.png"
+    )
+    player2 = Player(
+        player2_x,
+        player2_y,
+        player2_controls,
+        "/Users/zachary/CS102/shooter game/assets/pixel_character_pale_blue_original.png"
+    )
 
     # player group 
     players = pygame.sprite.Group()
